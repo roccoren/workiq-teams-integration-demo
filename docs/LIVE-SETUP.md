@@ -1,6 +1,11 @@
 # Live mode setup — connect the demo to a real Work IQ tenant
 
-The live engine drives the official **Work IQ CLI/MCP server** (`@microsoft/workiq`) with credentials cached on the machine running the demo. Everything below is standard Work IQ tenant enablement.
+本文覆盖两部分：**租户启用**（第 1 节，两条路径都必需）和 **CLI/stdio 路径的本机登录**（第 2 节起）。
+
+> **先确认你需要哪条路径。** Teams 场景请走 [SSO-OBO.md](SSO-OBO.md)：Teams 令牌经 On-Behalf-Of 换成
+> `WorkIQAgent.Ask` 后直接调 Work IQ 的托管 HTTP MCP 端点，**服务器上不需要装 CLI、不需要登录、不存任何
+> refresh token**，因此能跑在无头容器里。本文第 2 节之后的 `workiq auth login` 只适用于：在**自己的机器上**
+> 跑 Web UI（没有 Teams）、或使用多账号 stdio 拓扑——那时没有 Teams 令牌可换，凭据只能由 CLI 持有。
 
 ## 0. Prerequisites
 

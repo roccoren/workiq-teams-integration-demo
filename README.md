@@ -24,7 +24,7 @@ A demo application that uses **Microsoft Work IQ** — the intelligence layer ov
 
 **Two interchangeable engines** — the same API, UI and bot surface for both:
 
-- 🟢 **Live** — real Work IQ over MCP (needs a Microsoft 365 tenant + Copilot licenses, see [LIVE-SETUP](docs/LIVE-SETUP.md))
+- 🟢 **Live** — real Work IQ. Two ways to reach it: **Teams SSO + OBO** against the hosted MCP endpoint (no CLI anywhere, per-user identity) or the **local CLI/stdio MCP server**. See [SSO-OBO](docs/SSO-OBO.md) and [LIVE-SETUP](docs/LIVE-SETUP.md)
 - 🟡 **Demo (mock)** — deterministic simulation over a sample Contoso knowledge base; zero setup, runs anywhere
 
 ---
@@ -44,24 +44,46 @@ Open <http://localhost:3000> and ask something, e.g.:
 - “What does the expense reimbursement policy say about receipts?”
 
 ```bash
-npm test               # unit + API integration tests (24 tests)
+npm test               # unit + API integration tests
 npm run test:smoke     # end-to-end smoke of every API surface
 ```
 
-## ⚡ Quick start (live mode — real Work IQ)
+## ⚡ Quick start (real Work IQ data)
 
-1. Have a Microsoft 365 tenant with Copilot licenses and an admin who can grant consent (see [LIVE-SETUP](docs/LIVE-SETUP.md) — one-click admin consent URL included).
-2. Authenticate the CLI once on the machine running the demo:
-   ```bash
-   npx -y @microsoft/workiq accept-eula
-   npx -y @microsoft/workiq auth login
-   npx -y @microsoft/workiq ask -q "What meetings do I have this week?" --json   # sanity check
-   ```
-3. Start the demo:
-   ```bash
-   WORKIQ_MODE=live npm start
-   ```
-   The UI badge shows **● LIVE — Work IQ tenant**; queries now hit your real M365 data (each query takes ~20 s — Work IQ reasoning — and is streamed into the UI).
+Pick **one** of these. They are alternatives, not steps of the same flow.
+
+### Path A — Teams SSO + OBO (recommended; **no CLI at all**)
+
+The Teams tab/bot obtains an SSO token, the server exchanges it On-Behalf-Of for `WorkIQAgent.Ask`,
+and calls Work IQ's hosted HTTP MCP endpoint as that user. Nothing is installed or signed in on the
+server, so it runs in a headless container and every user gets their own delegated identity.
+
+```bash
+cp .env.tenant.example .env.contoso     # fill tenant id, subscription id, app name
+az login --tenant <tenant-id>
+npm run deploy:tenant -- .env.contoso --dry-run
+npm run deploy:tenant -- .env.contoso   # after the Copilot Credits policy is activated
+```
+
+Full walkthrough: [RUNBOOK](docs/RUNBOOK.md) · [SSO-OBO](docs/SSO-OBO.md) · [DEPLOY-NEW-TENANT](docs/DEPLOY-NEW-TENANT.md).
+
+### Path B — local CLI (only when there is no Teams SSO)
+
+Useful for driving the **web UI on your own machine** (no Teams app, no Azure), or for the
+multi-account stdio topology. This is the only case where the Work IQ CLI is needed — it holds the
+credentials, because there is no Teams token to exchange:
+
+```bash
+npx -y @microsoft/workiq accept-eula
+npx -y @microsoft/workiq auth login    # interactive: needs a browser/desktop session on THIS machine
+WORKIQ_MODE=live npm start
+```
+
+The UI badge shows **● LIVE — Work IQ tenant**; each query takes ~20 s (Work IQ reasoning) and is
+streamed into the UI. The CLI cannot log in headlessly (no device-code flow), so this path does not
+work inside a container — see the note at the bottom of this file.
+
+To check tenant enablement/licensing **without** installing the CLI, use `node scripts/probe-mcp.mjs`.
 
 ### Configuration
 
