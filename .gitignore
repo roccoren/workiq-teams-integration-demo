@@ -1,0 +1,16 @@
+node_modules/
+dist/
+public/app.js
+public/app.js.map
+.env
+.env.bot*
+.env.[a-z]*
+!.env.tenant.example
+!.env.example
+account-map.json
+.deploy-state.*.json
+teams/*.zip
+*.log
+.DS_Store
+teams/appPackage/*.png
+coverage/

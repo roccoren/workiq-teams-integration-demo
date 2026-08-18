@@ -1,0 +1,93 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.16/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.16",
+  "version": "1.0.0",
+  "id": "11111111-1111-4111-8111-111111111111",
+  "packageName": "com.contoso.workiqdemo",
+  "developer": {
+    "name": "Contoso Demo",
+    "websiteUrl": "https://workiq-demo.example.azurecontainerapps.io",
+    "privacyUrl": "https://workiq-demo.example.azurecontainerapps.io/privacy",
+    "termsOfUseUrl": "https://workiq-demo.example.azurecontainerapps.io/terms"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "name": {
+    "short": "WorkIQ Query Assistant",
+    "full": "WorkIQ Query Assistant (demo)"
+  },
+  "description": {
+    "short": "Query your internal information with Microsoft Work IQ.",
+    "full": "Ask questions about meetings, emails, documents, people and Teams conversations. Answers are grounded in Work IQ with citations and deep links. Demo app — not for production use."
+  },
+  "accentColor": "#7C8CFF",
+  "bots": [
+    {
+      "botId": "22222222-2222-4222-8222-222222222222",
+      "needsChannelSelector": false,
+      "isNotificationOnly": false,
+      "scopes": [
+        "personal",
+        "team",
+        "groupChat"
+      ],
+      "supportsFiles": false,
+      "commandLists": [
+        {
+          "scopes": [
+            "personal",
+            "team",
+            "groupChat"
+          ],
+          "commands": [
+            {
+              "title": "ask",
+              "description": "Ask Work IQ a question, e.g. /ask What meetings do I have this week?"
+            },
+            {
+              "title": "open",
+              "description": "Open the WorkIQ workspace as a Teams tab or dialog"
+            },
+            {
+              "title": "reset",
+              "description": "Start a fresh Work IQ conversation"
+            },
+            {
+              "title": "help",
+              "description": "Show how to use the assistant"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "staticTabs": [
+    {
+      "entityId": "workiq-workspace",
+      "name": "Workspace",
+      "contentUrl": "https://workiq-demo.example.azurecontainerapps.io/?inTeams=1",
+      "websiteUrl": "https://workiq-demo.example.azurecontainerapps.io",
+      "scopes": [
+        "personal"
+      ]
+    }
+  ],
+  "permissions": [
+    "identity",
+    "messageTeamMembers"
+  ],
+  "validDomains": [
+    "localhost",
+    "*.ngrok-free.app",
+    "*.ngrok.io",
+    "*.azurewebsites.net",
+    "*.azurecontainerapps.io",
+    "workiq-demo.example.azurecontainerapps.io"
+  ],
+  "webApplicationInfo": {
+    "id": "22222222-2222-4222-8222-222222222222",
+    "resource": "api://workiq-demo.example.azurecontainerapps.io/botid-22222222-2222-4222-8222-222222222222"
+  }
+}

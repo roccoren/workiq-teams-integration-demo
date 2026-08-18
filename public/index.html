@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WorkIQ Query &amp; Use Demo</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <header id="topbar">
+      <div class="brand">
+        <div class="logo">🧠</div>
+        <div>
+          <div class="brand-name">WorkIQ <span class="brand-sub">Query &amp; Use Demo</span></div>
+          <div class="brand-detail" id="engine-detail">connecting…</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <select id="account-select" class="account-select" hidden title="Work IQ 账号（每个账号用各自的权限查询）"></select>
+        <button class="icon-btn" id="btn-enroll" title="登录我的 Work IQ 账号（自服务）" hidden>🔑</button>
+        <span class="badge" id="mode-badge">…</span>
+        <span class="badge badge-ghost" id="teams-badge" hidden>Teams bot on</span>
+        <button class="icon-btn" id="btn-about" title="About">ⓘ</button>
+      </div>
+    </header>
+
+    <nav id="tabs">
+      <button class="tab active" data-tab="chat">💬 Chat with Work IQ</button>
+      <button class="tab" data-tab="grounding">🔎 Grounding Explorer</button>
+    </nav>
+
+    <main>
+      <section id="panel-chat" class="panel active">
+        <div id="chat-scroll">
+          <div id="chat">
+            <div class="welcome" id="welcome">
+              <div class="welcome-logo">🧠</div>
+              <h1>Ask your internal information</h1>
+              <p class="welcome-sub">Meetings · emails · documents · people · Teams conversations — grounded in Work IQ with citations, ready to use.</p>
+              <div id="suggested" class="chips"></div>
+            </div>
+          </div>
+        </div>
+        <div class="composer-wrap">
+          <div class="composer">
+            <textarea id="input" rows="1" placeholder="Ask Work IQ… e.g. “What meetings do I have this week?”"></textarea>
+            <button id="send" class="send-btn" title="Send">➤</button>
+          </div>
+          <div class="composer-hint">Answers are grounded in your M365 data and cite sources. Verify before acting on anything sensitive.</div>
+        </div>
+      </section>
+
+      <section id="panel-grounding" class="panel">
+        <div class="grounding-toolbar">
+          <textarea id="g-query" rows="1" placeholder="Search terms, e.g. “Project Atlas status” (one per line)"></textarea>
+          <button id="g-go" class="send-btn">Search</button>
+        </div>
+        <div id="g-results"></div>
+      </section>
+
+      <aside id="sources">
+        <div class="sources-head">
+          <h3>Sources</h3>
+          <span class="muted" id="sources-count"></span>
+        </div>
+        <div id="sources-list"><div class="empty">Ask a question to see grounded sources.</div></div>
+      </aside>
+    </main>
+
+    <div id="brief-drawer" hidden>
+      <div class="brief-head">
+        <h3>📋 Brief <span class="muted" id="brief-count"></span></h3>
+        <div class="brief-actions">
+          <button id="brief-export" class="btn">Export .md</button>
+          <button id="brief-clear" class="btn btn-ghost">Clear</button>
+        </div>
+      </div>
+      <div id="brief-list"></div>
+    </div>
+
+    <button id="brief-toggle" class="fab" hidden>📋</button>
+
+    <div id="enroll-modal" class="modal" hidden>
+      <div class="modal-card">
+        <h2>🔑 登录我的 Work IQ 账号</h2>
+        <p>用你自己的账号授权一次（约 2 分钟），之后 demo / Teams bot 就会<b>以你的身份和权限</b>查询你的数据。</p>
+        <div class="enroll-form">
+          <input id="enroll-email" type="email" placeholder="you@contoso.com" />
+          <button class="btn" id="enroll-start">开始登录</button>
+        </div>
+        <div id="enroll-progress" hidden>
+          <p class="enroll-code-label">请在浏览器打开并输入代码：</p>
+          <div class="enroll-code" id="enroll-code">……</div>
+          <a id="enroll-url" href="#" target="_blank" rel="noopener">打开授权页面 ↗</a>
+          <div class="status-line" id="enroll-status"></div>
+        </div>
+        <div class="brief-actions" style="margin-top:14px">
+          <button class="btn btn-ghost" id="enroll-close">关闭</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="about-modal" class="modal" hidden>
+      <div class="modal-card">
+        <h2>About this demo</h2>
+        <p>This demo shows how an application can <b>query</b> Microsoft Work IQ — the intelligence layer over Microsoft 365 — and <b>use</b> the results: grounded answers with citations, deep links into Teams/Outlook/SharePoint, document content retrieval, and a Teams bot surface.</p>
+        <p>Two engines:</p>
+        <ul>
+          <li><b>Live</b> — the WorkIQ MCP server (<code>workiq mcp</code>) over your real tenant.</li>
+          <li><b>Demo (mock)</b> — the same surface over a sample Contoso knowledge base, no tenant needed.</li>
+        </ul>
+        <p id="about-engine"></p>
+        <button class="btn" id="about-close">Got it</button>
+      </div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

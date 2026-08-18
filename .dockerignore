@@ -1,0 +1,27 @@
+# 构建上下文（`az acr build` 也按这个文件裁剪上传内容）
+node_modules
+dist
+.git
+.gitignore
+.github
+
+# 本地密钥 / 账号映射，绝不进镜像
+.env
+.env.*
+account-map.json
+
+# 构建产物由 builder 阶段重新生成
+public/app.js
+public/app.js.map
+
+# 打包好的 Teams zip 每次重新生成
+teams/*.zip
+
+# 与运行无关
+tests
+docs
+examples
+infra
+*.log
+coverage
+.DS_Store

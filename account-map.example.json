@@ -1,0 +1,4 @@
+{
+  "alice@contoso.com": "alice@contoso.com",
+  "<Teams aadObjectId or user id or name>": "bob@contoso.com"
+}

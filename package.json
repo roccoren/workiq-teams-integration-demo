@@ -1,0 +1,42 @@
+{
+  "name": "workiq-teams-integration-demo",
+  "version": "1.0.0",
+  "description": "Demo app: query and use Microsoft Work IQ (M365 intelligence) for internal information, via web UI and Microsoft Teams bot.",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "build": "tsc -p tsconfig.json && node scripts/build-web.mjs",
+    "build:web": "node scripts/build-web.mjs",
+    "test": "tsx --test tests/*.test.ts",
+    "test:smoke": "tsx scripts/smoke-test.mts",
+    "icons": "node scripts/generate-icons.mjs",
+    "gen:manifest": "node scripts/generate-manifest.mjs",
+    "pack:teams": "node scripts/pack-teams-app.mjs",
+    "deploy:tenant": "node scripts/onboard-tenant.mjs"
+  },
+  "dependencies": {
+    "@azure/msal-node": "^5.5.0",
+    "@microsoft/teams-js": "^2.55.0",
+    "@microsoft/workiq": "^1.0.0",
+    "botbuilder": "^4.23.3",
+    "cors": "^2.8.5",
+    "dotenv": "^17.0.0",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.23",
+    "@types/node": "^22.0.0",
+    "ajv": "^8.20.0",
+    "ajv-draft-04": "^1.0.0",
+    "ajv-formats": "^3.0.1",
+    "esbuild": "^0.25.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.8.0"
+  }
+}
