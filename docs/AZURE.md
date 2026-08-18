@@ -86,6 +86,20 @@ az containerapp logs show -n workiq-demo -g workiq-demo-rg --follow
 容器应用因为 `minReplicas=1` 会一直计费，空闲费率下约 $20–25/月，持续满载约 $75/月；
 存储 + 日志通常 < $5/月。**合计 $30–85/月**。不用时 `az group delete -n workiq-demo-rg --yes` 一键清掉。
 
+### 2.0 镜像里带不带 Work IQ CLI
+
+`@microsoft/workiq` 是**可选依赖**（约 146 MB 原生二进制 + ICU/OpenSSL 运行时）。Teams SSO + OBO
+走托管 HTTP MCP 端点，容器里根本用不到它，所以默认不打包：
+
+| 变体 | 构建方式 | 实测大小 | 适用 |
+| --- | --- | --- | --- |
+| 精简（默认） | `--build-arg INCLUDE_WORKIQ_CLI=false` | **313 MB** | Teams SSO + OBO、mock、`ENGINE_API_URL` 分离式 |
+| 含 CLI | `--build-arg INCLUDE_WORKIQ_CLI=true` | 512 MB | 容器内自己跑 `workiq mcp`（CLI/stdio 拓扑） |
+
+`scripts/deploy-azure.mjs` 自动判断：显式 `INCLUDE_WORKIQ_CLI=1/0` 优先，否则只有
+`WORKIQ_MODE=live` 且没配 `ENGINE_API_URL` 时才带上 CLI。精简镜像里若真去调 live 引擎，
+接口会立即返回 `CLI_NOT_FOUND` 并说明三条出路，而不是在请求路径上偷偷 `npx` 下载 146 MB。
+
 ### 2.1 订阅策略禁用存储账号共享密钥/公网访问时：`PERSIST_HOME=0`
 
 Container Apps 挂 Azure Files 走的是 **SMB + 存储账号密钥**。如果订阅有治理策略（例如 MCAPS 环境）

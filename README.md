@@ -149,7 +149,9 @@ No extra license is needed for the tab/dialog surfaces or for the bot itself —
 MICROSOFT_APP_ID=… MICROSOFT_APP_PASSWORD=… node scripts/deploy-azure.mjs
 ```
 
-Builds the container in ACR and deploys ACR + Container Apps environment + Container App (single replica) + Azure Files share mounted at `/home/app`; see [docs/AZURE.md](docs/AZURE.md) for the full topology, cost, and constraints. `Dockerfile` and `infra/main.bicep` package every runtime asset (Node server, bundled UI, Teams package, the Work IQ CLI native binary).
+Builds the container in ACR and deploys ACR + Container Apps environment + Container App (single replica), optionally with an Azure Files share mounted at `/home/app`; see [docs/AZURE.md](docs/AZURE.md) for topology, cost and constraints.
+
+The image ships **without** the Work IQ CLI by default (`@microsoft/workiq` is an optional dependency): the SSO + OBO path calls the hosted MCP endpoint, so the ~146 MB native binary and its ICU/OpenSSL runtime are dead weight — **313 MB instead of 512 MB** (measured). Build with `--build-arg INCLUDE_WORKIQ_CLI=true` when the container itself must spawn `workiq mcp`; `deploy-azure.mjs` sets that automatically for `WORKIQ_MODE=live` without `ENGINE_API_URL`.
 
 ## 🔌 API
 

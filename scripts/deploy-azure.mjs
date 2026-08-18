@@ -61,6 +61,10 @@ const persistHome = process.env.PERSIST_HOME !== "0";
 const oauthConnectionName = process.env.OAUTH_CONNECTION_NAME ?? "";
 const workiqMcpUrl = process.env.WORKIQ_MCP_URL ?? "";
 const workiqScope = process.env.WORKIQ_SCOPE ?? "";
+// CLI/stdio 拓扑才需要把 ~146 MB 的 Work IQ CLI 打进镜像；Teams SSO + OBO 不需要。
+// 显式 INCLUDE_WORKIQ_CLI=1 优先，否则只有“本容器内跑 live 引擎”时才自动带上。
+const includeCli = process.env.INCLUDE_WORKIQ_CLI === "1"
+  || (process.env.INCLUDE_WORKIQ_CLI !== "0" && mode === "live" && !engineApiUrl);
 const stamp = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 14);
 const imageTag = process.env.IMAGE_TAG ?? (skipBuild ? "latest" : `v${stamp}`);
 
@@ -134,8 +138,10 @@ const imageRef = `${acrLoginServer}/${appName}:${imageTag}`;
 if (skipBuild) {
   step(`4. 跳过镜像构建（SKIP_BUILD=1），沿用 ${imageRef}`);
 } else {
-  step(`4. 在 ACR 里构建镜像 ${appName}:${imageTag}（服务端构建，本机不需要 Docker）`);
-  shLive("az", ["acr", "build", "--registry", acrName, "-g", rg, "--file", "Dockerfile", "--image", `${appName}:${imageTag}`, "--image", `${appName}:latest`, "."]);
+  step(`4. 在 ACR 里构建镜像 ${appName}:${imageTag}（服务端构建，本机不需要 Docker）${includeCli ? " · 含 Work IQ CLI" : " · 不含 CLI（SSO/OBO 路径）"}`);
+  shLive("az", ["acr", "build", "--registry", acrName, "-g", rg, "--file", "Dockerfile",
+    "--build-arg", `INCLUDE_WORKIQ_CLI=${includeCli}`,
+    "--image", `${appName}:${imageTag}`, "--image", `${appName}:latest`, "."]);
 }
 
 // ---- 5. 部署容器应用（PUBLIC_URL 由环境默认域名推导，无需第二次回填）----

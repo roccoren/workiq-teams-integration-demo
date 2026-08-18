@@ -25,16 +25,23 @@ export interface LiveEngineOptions {
   onLog?: (line: string) => void;
 }
 
-export function resolveCliCommand(cliCommand?: string): { command: string[]; source: string } {
-  if (cliCommand?.trim()) return { command: cliCommand.trim().split(/\s+/), source: "WORKIQ_CLI" };
+/**
+ * Resolves how to invoke the Work IQ CLI. `@microsoft/workiq` is an *optional*
+ * dependency (~146 MB of native binary) because the Teams SSO + OBO path talks to the
+ * hosted HTTP endpoint instead — see docs/SSO-OBO.md. `installed` is false when only the
+ * npx fallback is left, which would download the package on first use: fine on a laptop,
+ * never what you want inside a container, so callers surface CLI_NOT_FOUND instead.
+ */
+export function resolveCliCommand(cliCommand?: string): { command: string[]; source: string; installed: boolean } {
+  if (cliCommand?.trim()) return { command: cliCommand.trim().split(/\s+/), source: "WORKIQ_CLI", installed: true };
   const local = join(ROOT, "node_modules", ".bin", "workiq");
-  if (existsSync(local)) return { command: [local], source: "local node_modules/.bin/workiq" };
+  if (existsSync(local)) return { command: [local], source: "local node_modules/.bin/workiq", installed: true };
   const pathDirs = (process.env.PATH ?? "").split(":");
   for (const dir of pathDirs) {
     const candidate = join(dir, "workiq");
-    if (existsSync(candidate)) return { command: [candidate], source: `PATH (${candidate})` };
+    if (existsSync(candidate)) return { command: [candidate], source: `PATH (${candidate})`, installed: true };
   }
-  return { command: ["npx", "-y", "@microsoft/workiq"], source: "npx -y @microsoft/workiq" };
+  return { command: ["npx", "-y", "@microsoft/workiq"], source: "npx -y @microsoft/workiq", installed: false };
 }
 
 export class LiveEngine {
@@ -44,10 +51,13 @@ export class LiveEngine {
   private lastErrorAt = 0;
   private readonly timeoutMs: number;
   cliSource: string;
+  /** False when only the npx fallback is available, i.e. the CLI is not installed here. */
+  private readonly cliInstalled: boolean;
 
   constructor(private opts: LiveEngineOptions = {}) {
-    const { command, source } = resolveCliCommand(opts.cliCommand);
+    const { command, source, installed } = resolveCliCommand(opts.cliCommand);
     this.cliSource = source;
+    this.cliInstalled = installed;
     this.timeoutMs = opts.requestTimeoutMs ?? 240_000;
     this.pool = new McpClientPool({
       command,
@@ -55,6 +65,16 @@ export class LiveEngine {
       requestTimeoutMs: this.timeoutMs,
       onLog: opts.onLog,
     });
+  }
+
+  /** Guard for every entry point: spawning `npx` here would fetch ~146 MB at request time. */
+  private assertCliPresent(): void {
+    if (this.cliInstalled) return;
+    throw new AskError(
+      "CLI_NOT_FOUND",
+      "The Work IQ CLI is not installed on this host.",
+      "@microsoft/workiq is an optional dependency. Either install it (npm install @microsoft/workiq, or build the image with --build-arg INCLUDE_WORKIQ_CLI=true), point WORKIQ_CLI at an existing binary, or use the Teams SSO + OBO path which needs no CLI (docs/SSO-OBO.md).",
+    );
   }
 
   /** Per-account MCP client (each account gets its own `workiq mcp --account <email>` process). */
@@ -77,6 +97,7 @@ export class LiveEngine {
 
   /** Boot probe: must be able to list tools. Throws AskError with guidance. */
   async health(): Promise<void> {
+    this.assertCliPresent();
     try {
       await this.pool.get().listTools(true);
       this.lastError = null;
@@ -98,6 +119,7 @@ export class LiveEngine {
   /** Primary query path: natural-language Q&A over internal information. */
   async ask(question: string, opts?: { conversationId?: string; account?: string; signal?: AbortSignal }): Promise<AskResult> {
     const account = opts?.account ?? this.opts.account;
+    this.assertCliPresent();
     try {
       const result = await askViaMcp(this.pool.get(account), question, {
         conversationId: opts?.conversationId,
@@ -111,6 +133,7 @@ export class LiveEngine {
 
   /** Grounded retrieval: structured hits (emails, files, meetings, chats, people) + grounding markdown. */
   async retrieve(queries: string[], opts?: { strategy?: "copilot" | "grounding"; account?: string; signal?: AbortSignal }): Promise<RetrieveResult> {
+    this.assertCliPresent();
     try {
       return await retrieveViaMcp(this.pool.get(opts?.account ?? this.opts.account), queries, {
         strategy: opts?.strategy,
@@ -123,6 +146,7 @@ export class LiveEngine {
 
   /** Use flow: download a document's binary content via its WorkIQ path. */
   async fetchBlob(path: string, account?: string): Promise<BlobResult> {
+    this.assertCliPresent();
     try {
       return await fetchBlobViaMcp(this.pool.get(account ?? this.opts.account), path, this.timeoutMs);
     } catch (e) {
@@ -132,6 +156,7 @@ export class LiveEngine {
 
   /** Use flow: discover WorkIQ entity paths by filter (e.g. "mail", "calendar", "messages"). */
   async searchPaths(filter: string, account?: string): Promise<PathEntry[]> {
+    this.assertCliPresent();
     try {
       return await searchPathsViaMcp(this.pool.get(account ?? this.opts.account), filter, this.timeoutMs);
     } catch (e) {

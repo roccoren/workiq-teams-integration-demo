@@ -22,11 +22,13 @@
   "dependencies": {
     "@azure/msal-node": "^5.5.0",
     "@microsoft/teams-js": "^2.55.0",
-    "@microsoft/workiq": "^1.0.0",
     "botbuilder": "^4.23.3",
     "cors": "^2.8.5",
     "dotenv": "^17.0.0",
     "express": "^4.21.2"
+  },
+  "optionalDependencies": {
+    "@microsoft/workiq": "^1.0.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
